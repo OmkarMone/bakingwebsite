@@ -36,7 +36,6 @@ function classify(name: string, osmShop: string | undefined, countryCode: string
     case "supermarket":
       return { type: "supermarket", chain: null, website: null };
     case "wholesale":
-    case "department_store":
       return { type: "hypermarket", chain: null, website: null };
     case "convenience":
     case "general":
@@ -55,7 +54,7 @@ function classify(name: string, osmShop: string | undefined, countryCode: string
 async function overpassStores(lat: number, lon: number, countryCode: string | null, radiusM: number): Promise<NearbyStore[]> {
   const q = `[out:json][timeout:20];
 (
-  nwr(around:${radiusM},${lat},${lon})["shop"~"^(supermarket|convenience|wholesale|department_store|general|confectionery|pastry|craft)$"];
+  nwr(around:${radiusM},${lat},${lon})["shop"~"^(supermarket|convenience|wholesale|general|confectionery|pastry|craft)$"];
   nwr(around:${radiusM * 2},${lat},${lon})["name"~"bak(e|ing)|phoon huat|cake suppl",i]["shop"];
 );
 out center tags 120;`;

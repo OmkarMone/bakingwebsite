@@ -54,6 +54,8 @@ export interface PlannableStore {
   name: string;
   type: StoreType;
   distanceKm: number | null;
+  /** Matched known retailer chain — preferred over unknown independents */
+  chain?: string | null;
 }
 
 export interface PlanStop<S extends PlannableStore> {
@@ -79,7 +81,7 @@ export function planShopping<S extends PlannableStore>(items: string[], stores: 
   const stops: PlanStop<S>[] = [];
   const pool = [...stores];
 
-  const distancePenalty = (s: S) => (s.distanceKm == null ? 0.4 : Math.min(1, s.distanceKm / 8));
+  const distancePenalty = (s: S) => (s.distanceKm == null ? 0.4 : Math.min(1, s.distanceKm / 8)) - (s.chain ? 0.6 : 0);
 
   for (let round = 0; round < maxStops && remaining.length && pool.length; round++) {
     let best: { s: S; items: string[]; value: number } | null = null;
