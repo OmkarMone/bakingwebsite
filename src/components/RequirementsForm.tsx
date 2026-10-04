@@ -246,10 +246,10 @@ export function RequirementsForm({
 
       <div className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="flex items-center gap-2 text-xs text-cocoa-400">
-          <FlaskConical className="h-4 w-4" aria-hidden /> Research usually takes 30–90 seconds.
+          <FlaskConical className="h-4 w-4" aria-hidden /> We match your request against our curated recipe library — usually instant.
         </p>
         <button type="submit" className="btn-accent px-6 py-3 text-base" disabled={!valid}>
-          <Search className="h-4 w-4" /> Research recipes
+          <Search className="h-4 w-4" /> Find my recipe
         </button>
       </div>
     </form>

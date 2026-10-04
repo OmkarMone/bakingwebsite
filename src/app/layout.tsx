@@ -11,9 +11,9 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: { default: "CakeRecipe Finder — research-backed cake recipes", template: "%s · CakeRecipe Finder" },
+  title: { default: "CakeRecipe Finder — curated cake recipes", template: "%s · CakeRecipe Finder" },
   description:
-    "Tell us the cake you want to bake. We research and compare recipes from reputable baking sites, then build a reliable recipe for your exact requirements — with sources, scaling, substitutions and where to buy ingredients.",
+    "Tell us the cake you want to bake. Get a curated recipe cross-checked against reputable baking sites, scaled to your requirements — with sources, substitutions and where to buy ingredients.",
 };
 
 export const viewport: Viewport = {
@@ -29,8 +29,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <footer className="no-print mt-16 border-t border-cream-200 bg-cream-50">
           <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-cocoa-400 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <p>
-              CakeRecipe Finder compares published recipes and links every source. Recipes we generate are syntheses —
-              always credit and visit the original authors.
+              CakeRecipe Finder recipes are written for our library and cross-checked against published recipes — every
+              reference is linked. Please credit and visit the original authors.
             </p>
             <p>Store availability and prices are never guessed.</p>
           </div>

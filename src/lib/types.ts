@@ -222,22 +222,50 @@ export interface ResearchConfidence {
   explanation: string;
 }
 
+export interface LibraryReference {
+  name: string;
+  title: string;
+  url: string;
+  author: string | null;
+  rating: number | null;
+  reviewCount: number | null;
+  verifiedAt: string;
+  whatWeTook: string;
+}
+
+export interface LibraryMatchInfo {
+  cakeId: string;
+  frostingId: string | null;
+  matchScore: number; // 0–100
+  reasons: string[];
+  /** true when no library recipe fully matched and this is the closest one */
+  closestOnly: boolean;
+  scaleFactor: number;
+  alternatives: { cakeId: string; name: string; score: number }[];
+}
+
 export interface ResearchResult {
   id: string; // cache key
+  /** "library": curated recipe from our library. "web": top-ranked published recipes (no library match). */
+  kind: "library" | "web";
   requirements: CakeRequirements;
-  recipe: FinalRecipe;
+  /** Full recipe — always present for library results; null for web results (we link to the source instead) */
+  recipe: FinalRecipe | null;
+  library: LibraryMatchInfo | null;
+  /** Verified published recipes our library recipe was cross-checked against */
+  references: LibraryReference[];
+  /** Ranked published recipes from live web research (web results only) */
   sources: ScoredRecipe[];
   rejected: { url: string; domain: string; reason: string }[];
   confidence: ResearchConfidence;
   validation: ValidationIssue[];
-  searchProvider: string;
+  searchProvider: string | null;
   queries: string[];
-  model: string;
   researchedAt: string;
   cached: boolean;
 }
 
-export type ProgressStep = "requirements" | "search" | "extract" | "compare" | "synthesize" | "validate";
+export type ProgressStep = "requirements" | "library" | "search" | "extract" | "compare" | "validate";
 
 export type ResearchEvent =
   | { type: "progress"; step: ProgressStep; status: "active" | "done" | "skipped"; detail?: string }

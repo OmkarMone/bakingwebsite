@@ -14,10 +14,10 @@ type Stage = "ask" | "requirements" | "researching" | "result";
 
 const INITIAL_STEPS: Record<ProgressStep, StepState> = {
   requirements: { status: "pending" },
+  library: { status: "pending" },
   search: { status: "pending" },
   extract: { status: "pending" },
   compare: { status: "pending" },
-  synthesize: { status: "pending" },
   validate: { status: "pending" },
 };
 
@@ -61,7 +61,7 @@ export function HomeFlow() {
     }
   }, []);
 
-  const startResearch = useCallback(async (reqInput: CakeRequirementsInput, forceRefresh = false) => {
+  const startResearch = useCallback(async (reqInput: CakeRequirementsInput, forceRefresh = false, cakeId: string | null = null) => {
     const parsed = RequirementsSchema.safeParse(reqInput);
     if (!parsed.success) {
       setError({ message: parsed.error.issues[0]?.message ?? "Please check your requirements." });
@@ -81,7 +81,7 @@ export function HomeFlow() {
         (e) => {
           if (e.type === "progress") setSteps((s) => ({ ...s, [e.step]: { status: e.status, detail: e.detail ?? s[e.step].detail } }));
         },
-        { forceRefresh, signal: ctrl.signal },
+        { forceRefresh, cakeId, signal: ctrl.signal },
       );
       setResult(r);
       lastResult.save(r);
@@ -140,7 +140,8 @@ export function HomeFlow() {
             setDraft(result.requirements);
             setStage("requirements");
           }}
-          onRefresh={() => startResearch(result.requirements, true)}
+          onRefresh={result.kind === "web" ? () => startResearch(result.requirements, true) : undefined}
+          onPickRecipe={(cakeId) => startResearch(result.requirements, false, cakeId)}
         />
       )}
     </div>

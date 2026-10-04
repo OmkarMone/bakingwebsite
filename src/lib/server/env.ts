@@ -7,8 +7,6 @@ const read = (k: string) => {
 };
 
 export const env = {
-  anthropicKey: () => read("ANTHROPIC_API_KEY"),
-  anthropicModel: () => read("ANTHROPIC_MODEL") ?? "claude-opus-5-5",
   searchProvider: () => read("SEARCH_PROVIDER")?.toLowerCase(),
   braveKey: () => read("BRAVE_SEARCH_API_KEY"),
   tavilyKey: () => read("TAVILY_API_KEY"),

@@ -8,7 +8,7 @@ import "server-only";
 type Bucket = { limit: number; windowMs: number };
 
 export const LIMITS = {
-  research: { limit: 6, windowMs: 10 * 60_000 }, // expensive: web search + LLM
+  research: { limit: 30, windowMs: 10 * 60_000 }, // web-search fallback can be expensive
   parse: { limit: 30, windowMs: 60_000 },
   substitute: { limit: 20, windowMs: 60_000 },
   shopping: { limit: 20, windowMs: 60_000 },

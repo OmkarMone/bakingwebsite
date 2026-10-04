@@ -9,12 +9,10 @@ import { SubstitutionPanel } from "./SubstitutionPanel";
 export function IngredientList({
   ingredients,
   req,
-  recipeName,
   factor,
 }: {
   ingredients: RecipeIngredient[];
   req: CakeRequirements;
-  recipeName: string;
   factor: number;
 }) {
   const [subFor, setSubFor] = useState<RecipeIngredient | null>(null);
@@ -85,7 +83,7 @@ export function IngredientList({
       <p className="no-print mt-3 text-xs text-cocoa-400">
         Tap <Replace className="inline h-3 w-3" aria-hidden /> next to any ingredient if you don&apos;t have it.
       </p>
-      {subFor && <SubstitutionPanel ingredient={subFor} req={req} recipeName={recipeName} allIngredients={ingredients} onClose={() => setSubFor(null)} />}
+      {subFor && <SubstitutionPanel ingredient={subFor} req={req} onClose={() => setSubFor(null)} />}
     </div>
   );
 }

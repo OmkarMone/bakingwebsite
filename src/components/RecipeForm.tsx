@@ -30,14 +30,14 @@ export function RecipeForm({
       <div className="mx-auto max-w-3xl text-center">
         <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-cream-50 px-3 py-1 text-xs font-medium text-cocoa-500 shadow-card">
           <Sparkles className="h-3.5 w-3.5 text-caramel-500" aria-hidden />
-          Research-backed recipes, not guesses
+          Curated recipes, cross-checked against trusted bakers
         </p>
         <h1 className="text-4xl font-semibold tracking-tight text-cocoa-800 sm:text-5xl md:text-6xl">
           What cake do you <span className="text-berry-500">want to bake?</span>
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-sm text-cocoa-500 sm:text-base">
-          We search reputable baking sites, compare their ratios and techniques, and build one reliable recipe for your
-          exact needs — with every source linked.
+          Our curated library of cake recipes — each cross-checked against well-rated published versions — scaled and
+          adapted to your exact needs, with every reference linked.
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export function RecipeForm({
 
       <div className="mx-auto mt-14 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { icon: BookOpenCheck, title: "Real recipe research", body: "We read published recipe data — ratings, reviews, yields, temperatures — from reputable sites." },
+          { icon: BookOpenCheck, title: "Curated, not generated", body: "Every recipe is written for our library and cross-checked against well-rated published recipes. No AI." },
           { icon: ShieldCheck, title: "Transparent sources", body: "Every recipe we compared is linked. We never invent sources, ratings or prices." },
           { icon: Scale, title: "Scale & substitute", body: "Resize by weight or pan, swap ingredients with baking-chemistry guidance." },
           { icon: ShoppingBasket, title: "Where to buy", body: "Find nearby stores and the fewest stops to get everything." },

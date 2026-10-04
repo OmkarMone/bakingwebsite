@@ -7,11 +7,11 @@ export type StepState = { status: "pending" | "active" | "done" | "skipped"; det
 
 const LABELS: Record<ProgressStep, string> = {
   requirements: "Understanding your requirements",
-  search: "Finding recipes",
-  extract: "Reading recipe data",
-  compare: "Comparing sources",
-  synthesize: "Optimizing the recipe",
-  validate: "Checking quantities & preparing your recipe",
+  library: "Checking our curated recipe library",
+  search: "Searching the web (only if needed)",
+  extract: "Reading published recipe data",
+  compare: "Ranking recipes",
+  validate: "Scaling, checking quantities & preparing your recipe",
 };
 
 export function ResearchProgress({ steps, title, onCancel }: { steps: Record<ProgressStep, StepState>; title: string; onCancel: () => void }) {
@@ -24,7 +24,7 @@ export function ResearchProgress({ steps, title, onCancel }: { steps: Record<Pro
             <Loader2 className="h-6 w-6 animate-spin text-caramel-600" aria-hidden />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-cocoa-800">Researching recipes…</h1>
+            <h1 className="text-xl font-semibold text-cocoa-800">Finding your recipe…</h1>
             <p className="text-sm text-cocoa-400">for {title}</p>
           </div>
         </div>
@@ -45,7 +45,10 @@ export function ResearchProgress({ steps, title, onCancel }: { steps: Record<Pro
                   )}
                 </span>
                 <div>
-                  <p className={`text-sm font-medium ${s.status === "pending" ? "text-cocoa-400" : "text-cocoa-800"}`}>{LABELS[k]}</p>
+                  <p className={`text-sm font-medium ${s.status === "pending" || s.status === "skipped" ? "text-cocoa-400" : "text-cocoa-800"}`}>
+                    {LABELS[k]}
+                    {s.status === "skipped" && <span className="ml-1.5 text-xs font-normal">— not needed</span>}
+                  </p>
                   {s.detail && <p className="text-xs text-cocoa-400">{s.detail}</p>}
                 </div>
               </li>
@@ -59,7 +62,7 @@ export function ResearchProgress({ steps, title, onCancel }: { steps: Record<Pro
         </div>
       </div>
       <p className="mt-4 text-center text-xs text-cocoa-400">
-        We only read pages whose robots.txt allows it, and we use the recipe data publishers make available to search engines.
+        If we search the web, we only read pages whose robots.txt allows it, using the recipe data publishers provide to search engines.
       </p>
     </section>
   );

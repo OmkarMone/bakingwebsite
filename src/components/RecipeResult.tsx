@@ -19,11 +19,12 @@ import {
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
-import type { RecipeIngredient, ResearchResult } from "@/lib/types";
+import type { FinalRecipe, RecipeIngredient, ResearchResult } from "@/lib/types";
 import { roundPan } from "@/lib/calc/recipeScaler";
 import { frostingTypeFromText } from "@/lib/calc/frostingCalculator";
 import { Badge, Callout, Card, SectionHeading, Stat } from "./ui";
-import { RecipeComparison } from "./RecipeComparison";
+import { ReferenceList } from "./SourcesList";
+import { WebResult } from "./WebResult";
 import { IngredientList } from "./IngredientList";
 import { ShoppingList } from "./ShoppingList";
 import { SourcesList } from "./SourcesList";
@@ -34,7 +35,7 @@ import { Troubleshooting } from "./Troubleshooting";
 
 const NAV = [
   ["overview", "Overview"],
-  ["research", "Research"],
+  ["research", "Why this recipe"],
   ["ingredients", "Ingredients"],
   ["method", "Method"],
   ["frosting", "Frosting"],
@@ -45,22 +46,30 @@ const NAV = [
 
 const CONFIDENCE_TONE = { High: "good", Medium: "warn", Low: "bad" } as const;
 
-export function RecipeResult({
-  result,
-  mode = "live",
-  saved,
-  onNewSearch,
-  onEditRequirements,
-  onRefresh,
-}: {
+export interface RecipeResultProps {
   result: ResearchResult;
   mode?: "live" | "saved" | "shared";
   saved?: { id: string; favorite: boolean; shareId: string | null };
   onNewSearch?: () => void;
   onEditRequirements?: () => void;
   onRefresh?: () => void;
-}) {
-  const r = result.recipe;
+  onPickRecipe?: (cakeId: string) => void;
+}
+
+export function RecipeResult(props: RecipeResultProps) {
+  return props.result.recipe ? <LibraryRecipeView {...props} recipe={props.result.recipe} /> : <WebResult {...props} />;
+}
+
+function LibraryRecipeView({
+  result,
+  recipe: r,
+  mode = "live",
+  saved,
+  onNewSearch,
+  onEditRequirements,
+  onRefresh,
+  onPickRecipe,
+}: RecipeResultProps & { recipe: FinalRecipe }) {
   const o = r.overview;
   const req = result.requirements;
   const [scaled, setScaled] = useState<{ ingredients: RecipeIngredient[]; factor: number }>({ ingredients: r.ingredients, factor: 1 });
@@ -115,10 +124,10 @@ export function RecipeResult({
           <div className="bg-gradient-to-br from-cocoa-700 via-cocoa-600 to-cocoa-500 px-5 py-7 text-cream-50 sm:px-8 sm:py-9">
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium">
-                <Sparkles className="h-3.5 w-3.5" /> Our recommended recipe
+                <Sparkles className="h-3.5 w-3.5" /> {result.library?.closestOnly ? "Closest match from our library" : "From our curated library"}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium">
-                <Microscope className="h-3.5 w-3.5" /> Research confidence: {result.confidence.level}
+                <Microscope className="h-3.5 w-3.5" /> Match confidence: {result.confidence.level}
               </span>
               {result.cached && (
                 <span className="rounded-full bg-white/10 px-3 py-1 text-xs">Researched {ageDays === 0 ? "today" : `${ageDays} day${ageDays === 1 ? "" : "s"} ago`}</span>
@@ -127,7 +136,7 @@ export function RecipeResult({
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{r.name}</h1>
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-cream-100/90 sm:text-base">{r.summary}</p>
             <p className="mt-3 text-xs text-cream-100/70">
-              Based on the recipes we researched, this is our highest-ranked option for your requirements.
+              A tested-style recipe from our curated library, scaled and adapted to your requirements — no AI involved.
             </p>
           </div>
           <div className="space-y-4 px-5 py-5 sm:px-8">
@@ -190,25 +199,24 @@ export function RecipeResult({
           )}
         </Card>
 
-        {/* Research */}
+        {/* Why this recipe */}
         <Card className="p-5 sm:p-7">
-          <SectionHeading
-            id="research"
-            icon={<FlaskConical className="h-5 w-5" />}
-            title="How we chose this recipe"
-            subtitle="Sources researched vs. our recommended recipe"
-          />
+          <SectionHeading id="research" icon={<FlaskConical className="h-5 w-5" />} title="Why this recipe" subtitle="How it matches your request, and the published recipes behind it" />
           <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Stat label="Research confidence" value={<Badge tone={CONFIDENCE_TONE[result.confidence.level]} className="text-xs">{result.confidence.level}</Badge>} />
-            <Stat label="Recipes compared" value={result.confidence.recipesCompared} hint={`${result.confidence.recipesFound} usable found`} />
-            <Stat label="Sources analyzed" value={result.confidence.sourcesAnalyzed} hint="distinct sites" />
+            <Stat label="Match confidence" value={<Badge tone={CONFIDENCE_TONE[result.confidence.level]} className="text-xs">{result.confidence.level}</Badge>} />
             <Stat label="Requirements matched" value={`${result.confidence.requirementsMatchedPct}%`} />
+            <Stat label="Cross-checked against" value={`${result.references.length} recipes`} hint={`${result.confidence.sourcesAnalyzed} sites`} />
+            <Stat label="Scaled" value={result.library && result.library.scaleFactor !== 1 ? `×${result.library.scaleFactor.toFixed(2)}` : "Original size"} />
           </div>
-          <p className="mb-5 text-sm text-cocoa-500">{result.confidence.explanation}</p>
-          <RecipeComparison result={result} />
+          <p className="mb-4 text-sm text-cocoa-500">{result.confidence.explanation}</p>
+          {result.library && result.library.reasons.length > 0 && (
+            <div className="mb-5 flex flex-wrap gap-1.5">
+              {result.library.reasons.map((x) => <Badge key={x} tone="good">{x}</Badge>)}
+            </div>
+          )}
           {r.keyDecisions.length > 0 && (
-            <div className="mt-6">
-              <h3 className="mb-2 text-sm font-semibold text-cocoa-700">Key decisions when combining sources</h3>
+            <div className="mb-6">
+              <h3 className="mb-2 text-sm font-semibold text-cocoa-700">Key decisions in this recipe</h3>
               <ul className="space-y-2">
                 {r.keyDecisions.map((d) => (
                   <li key={d.decision} className="rounded-2xl bg-cream-100 px-4 py-3 text-sm">
@@ -217,6 +225,20 @@ export function RecipeResult({
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+          <h3 className="mb-2 text-sm font-semibold text-cocoa-700">Published recipes we cross-checked</h3>
+          <ReferenceList references={result.references} />
+          {onPickRecipe && result.library && result.library.alternatives.length > 0 && (
+            <div className="no-print mt-6">
+              <h3 className="mb-2 text-sm font-semibold text-cocoa-700">Other recipes from our library that fit</h3>
+              <div className="flex flex-wrap gap-2">
+                {result.library.alternatives.map((a) => (
+                  <button key={a.cakeId} className="chip" onClick={() => onPickRecipe(a.cakeId)}>
+                    {a.name}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </Card>
@@ -246,7 +268,7 @@ export function RecipeResult({
               compact
             />
           </div>
-          <IngredientList ingredients={scaled.ingredients} req={req} recipeName={r.name} factor={scaled.factor} />
+          <IngredientList ingredients={scaled.ingredients} req={req} factor={scaled.factor} />
         </Card>
 
         {/* Method */}
@@ -331,7 +353,7 @@ export function RecipeResult({
 
         {/* Sources */}
         <Card className="p-5 sm:p-7">
-          <SectionHeading id="sources" icon={<BookOpen className="h-5 w-5" />} title="Sources researched" />
+          <SectionHeading id="sources" icon={<BookOpen className="h-5 w-5" />} title="Sources" />
           <SourcesList result={result} />
         </Card>
 

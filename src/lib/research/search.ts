@@ -4,7 +4,6 @@ import type { SearchHit } from "@/lib/types";
 import { env } from "@/lib/server/env";
 import { getDb } from "@/lib/server/db";
 import { sharedCache } from "@/lib/server/memoryCache";
-import { anthropicClient } from "@/lib/ai/claude";
 import { domainOf } from "./sources";
 import type { SearchQuery } from "./queries";
 
@@ -94,49 +93,9 @@ const googleCse: SearchProvider = {
   },
 };
 
-/**
- * Claude's server-side web search tool. URLs are taken ONLY from the tool's
- * `web_search_result` blocks (real search results) — never from model-written text.
- */
-const anthropicSearch: SearchProvider = {
-  name: "Claude web search",
-  async search(q, count) {
-    const client = anthropicClient();
-    const tool = {
-      type: "web_search_20260209" as const,
-      name: "web_search" as const,
-      max_uses: 1,
-      ...(q.includeDomains?.length ? { allowed_domains: q.includeDomains.slice(0, 20) } : {}),
-    };
-    const messages: { role: "user" | "assistant"; content: unknown }[] = [
-      {
-        role: "user",
-        content: `Run exactly one web search for: "${q.q}". Do not answer anything else; reply "done" after searching.`,
-      },
-    ];
-    const hits: SearchHit[] = [];
-    for (let turn = 0; turn < 3; turn++) {
-      const res = await client.messages.create({
-        model: env.anthropicModel(),
-        max_tokens: 2048,
-        output_config: { effort: "low" },
-        tools: [tool],
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        messages: messages as any,
-      });
-      for (const block of res.content) {
-        if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
-          for (const r of block.content) {
-            if (r.type === "web_search_result") hits.push(hit("anthropic", q.q, r.url, r.title, r.page_age ?? ""));
-          }
-        }
-      }
-      if (res.stop_reason !== "pause_turn") break;
-      messages.push({ role: "assistant", content: res.content });
-    }
-    return hits.slice(0, count);
-  },
-};
+export function searchConfigured(): boolean {
+  return Boolean(env.braveKey() || env.tavilyKey() || env.serpapiKey() || (env.googleCseKey() && env.googleCseId()));
+}
 
 export function selectProvider(): SearchProvider {
   const wanted = env.searchProvider();
@@ -145,7 +104,6 @@ export function selectProvider(): SearchProvider {
     tavily: env.tavilyKey() ? tavily : null,
     serpapi: env.serpapiKey() ? serpapi : null,
     google: env.googleCseKey() && env.googleCseId() ? googleCse : null,
-    anthropic: env.anthropicKey() ? anthropicSearch : null,
   };
   if (wanted) {
     const p = available[wanted];
@@ -155,7 +113,7 @@ export function selectProvider(): SearchProvider {
   const first = Object.values(available).find(Boolean);
   if (!first)
     throw new SearchConfigError(
-      "No web search provider is configured. Add BRAVE_SEARCH_API_KEY, TAVILY_API_KEY, SERPAPI_API_KEY, GOOGLE_CSE_API_KEY+GOOGLE_CSE_ID, or ANTHROPIC_API_KEY.",
+      "No web search provider is configured. Add BRAVE_SEARCH_API_KEY, TAVILY_API_KEY, SERPAPI_API_KEY or GOOGLE_CSE_API_KEY+GOOGLE_CSE_ID.",
     );
   return first;
 }

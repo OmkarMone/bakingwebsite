@@ -39,7 +39,8 @@ export function classifyIngredients(lines: string[]): DietFlags {
       const stripped = line.replace(new RegExp(DAIRY_EXEMPT.source, "g"), " ");
       if (DAIRY.test(stripped)) flags.dairy.push(raw);
     }
-    if (GLUTEN.test(line)) {
+    // An ingredient explicitly labelled gluten-free ("gluten-free flour blend") is exempt as a whole
+    if (GLUTEN.test(line) && !/\bgluten[- ]free\b/.test(line)) {
       const stripped = line.replace(new RegExp(GLUTEN_EXEMPT.source, "g"), " ");
       if (GLUTEN.test(stripped)) flags.gluten.push(raw);
     }

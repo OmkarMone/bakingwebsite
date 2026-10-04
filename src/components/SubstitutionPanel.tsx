@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AlertTriangle, Loader2, Sparkles, X } from "lucide-react";
+import { useEffect } from "react";
+import { AlertTriangle, X } from "lucide-react";
 import type { CakeRequirements, RecipeIngredient } from "@/lib/types";
 import { findSubstitutions, type SubstitutionResult } from "@/lib/content/substitutions";
-import { api } from "@/lib/client/api";
 import { Badge, Callout } from "./ui";
 
 type Sub = Pick<SubstitutionResult, "substitutes" | "recommendedIndex" | "warnings"> & { ingredient?: string };
@@ -14,50 +13,15 @@ const IMPACT_TONE = { minimal: "good", noticeable: "warn", significant: "bad" } 
 export function SubstitutionPanel({
   ingredient,
   req,
-  recipeName,
-  allIngredients,
   onClose,
 }: {
   ingredient: RecipeIngredient;
   req: CakeRequirements;
-  recipeName: string;
-  allIngredients: RecipeIngredient[];
   onClose: () => void;
 }) {
   const diet = { eggless: req.eggless ?? undefined, vegan: req.vegan ?? undefined, dairyFree: req.dairyFree ?? undefined, glutenFree: req.glutenFree ?? undefined };
   const local = findSubstitutions(ingredient.name, { grams: ingredient.grams, ml: ingredient.ml, ...diet });
-  const [aiResult, setAiResult] = useState<Sub | null>(null);
-  const [loading, setLoading] = useState(!local);
-  const [error, setError] = useState<string | null>(null);
-  const result: Sub | null = local ?? aiResult;
-  const source = local ? "knowledge_base" : aiResult ? "ai" : null;
-
-  useEffect(() => {
-    if (local) return;
-    let cancelled = false;
-    api<{ source: string; result: Sub }>("/api/substitute", {
-      method: "POST",
-      json: {
-        ingredient: ingredient.name,
-        grams: ingredient.grams,
-        ml: ingredient.ml,
-        role: ingredient.role,
-        recipeName,
-        otherIngredients: allIngredients.map((i) => i.name).slice(0, 40),
-        eggless: req.eggless,
-        vegan: req.vegan,
-        dairyFree: req.dairyFree,
-        glutenFree: req.glutenFree,
-      },
-    })
-      .then((r) => !cancelled && setAiResult(r.result))
-      .catch((e) => !cancelled && setError((e as Error).message))
-      .finally(() => !cancelled && setLoading(false));
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ingredient.name]);
+  const result: Sub | null = local;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -87,20 +51,15 @@ export function SubstitutionPanel({
           </button>
         </div>
 
-        {loading && (
-          <p className="flex items-center gap-2 text-sm text-cocoa-500">
-            <Loader2 className="h-4 w-4 animate-spin" /> Working out a substitute that keeps the chemistry balanced…
-          </p>
+        {!result && (
+          <Callout tone="info">
+            We don&apos;t have tested substitutes for “{ingredient.name}” yet — we&apos;d rather say so than guess. Check the{" "}
+            <a href="/troubleshooting" className="underline">troubleshooting guide</a> or keep the original ingredient for best results.
+          </Callout>
         )}
-        {error && <Callout tone="error">{error}</Callout>}
 
         {result && (
           <div className="space-y-3">
-            {source === "ai" && (
-              <p className="flex items-center gap-1.5 text-xs text-caramel-600">
-                <Sparkles className="h-3.5 w-3.5" /> AI-generated — this ingredient isn&apos;t in our curated guide yet.
-              </p>
-            )}
             {result.substitutes.map((s, i) => (
               <div
                 key={i}

@@ -27,12 +27,12 @@ export const parseQuery = (query: string) =>
 export async function runResearch(
   requirements: CakeRequirements,
   onEvent: (e: ResearchEvent) => void,
-  opts: { forceRefresh?: boolean; signal?: AbortSignal } = {},
+  opts: { forceRefresh?: boolean; cakeId?: string | null; signal?: AbortSignal } = {},
 ): Promise<ResearchResult> {
   const res = await fetch("/api/research", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ requirements, forceRefresh: opts.forceRefresh ?? false }),
+    body: JSON.stringify({ requirements, forceRefresh: opts.forceRefresh ?? false, cakeId: opts.cakeId ?? null }),
     signal: opts.signal,
   });
   if (!res.ok || !res.body) {

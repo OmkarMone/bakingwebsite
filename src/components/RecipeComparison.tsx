@@ -6,8 +6,8 @@ import type { ResearchResult, ScoredRecipe } from "@/lib/types";
 import { Badge } from "./ui";
 
 const ROLE_LABEL: Record<NonNullable<ScoredRecipe["role"]>, { label: string; tone: "dark" | "good" | "warn" | "neutral" }> = {
-  primary: { label: "Primary base", tone: "dark" },
-  supporting: { label: "Supporting", tone: "good" },
+  primary: { label: "Top pick", tone: "dark" },
+  supporting: { label: "Good match", tone: "good" },
   technique_reference: { label: "Technique only", tone: "warn" },
   not_used: { label: "Not used", tone: "neutral" },
 };
@@ -21,7 +21,6 @@ function YesNo({ ok }: { ok: boolean | null }) {
 export function RecipeComparison({ result }: { result: ResearchResult }) {
   const [showAll, setShowAll] = useState(false);
   const req = result.requirements;
-  const ai = new Map(result.recipe.sourceComparison.map((c) => [c.url, c]));
   const rows = showAll ? result.sources : result.sources.slice(0, 6);
   const dietCol = req.vegan ? "Vegan" : req.eggless ? "Eggless" : req.glutenFree ? "Gluten-free" : req.dairyFree ? "Dairy-free" : null;
   const dietOk = (s: ScoredRecipe) =>
@@ -30,15 +29,13 @@ export function RecipeComparison({ result }: { result: ResearchResult }) {
   return (
     <div>
       <div className="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="w-full min-w-[620px] text-left text-sm">
           <thead>
             <tr className="border-b border-cream-200 text-[11px] uppercase tracking-wide text-cocoa-400">
               <th className="py-2 pr-3 font-semibold">Source</th>
               <th className="px-2 py-2 text-right font-semibold">Rating</th>
               <th className="px-2 py-2 text-right font-semibold">Reviews</th>
               {dietCol && <th className="px-2 py-2 text-center font-semibold">{dietCol}</th>}
-              <th className="px-2 py-2 font-semibold">Moistness*</th>
-              <th className="px-2 py-2 font-semibold">Difficulty*</th>
               <th className="px-2 py-2 text-right font-semibold">Relevance</th>
               <th className="px-2 py-2 text-right font-semibold">Score</th>
               <th className="py-2 pl-2 font-semibold">Role</th>
@@ -46,7 +43,6 @@ export function RecipeComparison({ result }: { result: ResearchResult }) {
           </thead>
           <tbody>
             {rows.map((s) => {
-              const a = ai.get(s.url);
               const role = ROLE_LABEL[s.role ?? "not_used"];
               return (
                 <tr key={s.url} className="border-b border-cream-200/70 align-top last:border-0">
@@ -75,8 +71,6 @@ export function RecipeComparison({ result }: { result: ResearchResult }) {
                       <div className="flex justify-center"><YesNo ok={dietOk(s)} /></div>
                     </td>
                   )}
-                  <td className="px-2 py-3 text-cocoa-600">{a?.moistness ?? "—"}</td>
-                  <td className="px-2 py-3 text-cocoa-600">{a?.difficulty ?? "—"}</td>
                   <td className="px-2 py-3 text-right tabular-nums">{s.relevancePct}%</td>
                   <td className="px-2 py-3 text-right font-semibold tabular-nums">{s.score}</td>
                   <td className="py-3 pl-2">
@@ -90,7 +84,7 @@ export function RecipeComparison({ result }: { result: ResearchResult }) {
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-cocoa-400">
         <p>
-          Ratings and review counts are read from each page&apos;s published recipe data. *Moistness and difficulty are our AI&apos;s assessment of each formula. Score is
+          Ratings and review counts are read from each page&apos;s published recipe data. Score is
           out of 100 (reliability 20 · rating 12 · reviews 10 · detail 10 · ingredients 8 · technique 10 · relevance 25 · evidence 5).
         </p>
         {result.sources.length > 6 && (

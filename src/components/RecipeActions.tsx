@@ -29,6 +29,9 @@ export function RecipeActions({
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
 
+  const title = result.recipe?.name ?? result.sources[0]?.title ?? "Cake recipe";
+  const summary = result.recipe?.summary ?? `Top-ranked ${result.requirements.cakeType} recipe from ${result.sources[0]?.sourceName ?? "the web"}`;
+
   const flash = (tone: "ok" | "err", text: string) => {
     setMessage({ tone, text });
     setTimeout(() => setMessage(null), 4000);
@@ -80,7 +83,7 @@ export function RecipeActions({
       }
       const url = `${window.location.origin}/r/${sid}`;
       if (navigator.share) {
-        await navigator.share({ title: result.recipe.name, text: result.recipe.summary, url }).catch(() => {});
+        await navigator.share({ title, text: summary, url }).catch(() => {});
       } else {
         await navigator.clipboard.writeText(url);
         flash("ok", "Share link copied to clipboard");
@@ -105,7 +108,7 @@ export function RecipeActions({
         <button className="btn-ghost" onClick={share} disabled={busy !== null}>
           {busy === "share" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />} Share
         </button>
-        <button className="btn-ghost" onClick={() => downloadText(`${slugify(result.recipe.name)}.md`, recipeToMarkdown(result, ingredients))}>
+        <button className="btn-ghost" onClick={() => downloadText(`${slugify(title)}.md`, recipeToMarkdown(result, ingredients))}>
           <Download className="h-4 w-4" /> Download
         </button>
         <button className="btn-ghost" onClick={() => window.print()}>

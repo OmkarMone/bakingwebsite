@@ -55,10 +55,10 @@ export const POST = handler(async (req: Request) => {
   if (!result) throw new HttpError(404, "This research result has expired — please run the search again before saving.", "expired");
   const profileId = await ensureProfileId();
   const db = requireDb();
-  const existing = await db.savedRecipe.findFirst({ where: { profileId, title: result.recipe.name, data: { path: ["id"], equals: researchId } } });
+  const existing = await db.savedRecipe.findFirst({ where: { profileId, data: { path: ["id"], equals: researchId } } });
   if (existing) return NextResponse.json({ id: existing.id, alreadySaved: true });
   const row = await db.savedRecipe.create({
-    data: { profileId, title: result.recipe.name, data: JSON.parse(JSON.stringify(result)), favorite, source: env.dataSource() },
+    data: { profileId, title: result.recipe?.name ?? result.sources[0]?.title ?? result.requirements.cakeType, data: JSON.parse(JSON.stringify(result)), favorite, source: env.dataSource() },
   });
   return NextResponse.json({ id: row.id }, { status: 201 });
 });
