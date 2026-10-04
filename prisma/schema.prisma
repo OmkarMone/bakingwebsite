@@ -1,0 +1,90 @@
+// CakeRecipe Finder — PostgreSQL schema
+// Every table carries a `source` column ("local" | "production") so local test data
+// can always be distinguished from real production rows.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Anonymous profile. Created lazily — only when a user first saves a recipe or preference.
+model Profile {
+  id          String          @id @default(cuid())
+  /// Preferences JSON: egg/eggless, sweetness, sizes, stores, equipment. Never precise coordinates.
+  preferences Json            @default("{}")
+  source      String          @default("local")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  recipes     SavedRecipe[]
+  history     RecipeHistory[]
+}
+
+model SavedRecipe {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title        String
+  /// Full ResearchResult snapshot (recipe + sources + confidence) at the time of saving
+  data         Json
+  favorite     Boolean  @default(false)
+  /// Unguessable id for public share links; null until the user shares
+  shareId      String?  @unique
+  source       String   @default("local")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([profileId, createdAt])
+}
+
+model RecipeHistory {
+  id          String   @id @default(cuid())
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  researchKey String
+  title       String
+  query       String
+  source      String   @default("local")
+  createdAt   DateTime @default(now())
+
+  @@index([profileId, createdAt])
+}
+
+/// Cached full research results, keyed by a hash of the normalised requirements.
+model ResearchCache {
+  key          String   @id
+  requirements Json
+  result       Json
+  source       String   @default("local")
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+
+  @@index([expiresAt])
+}
+
+/// Cached per-URL extraction results (schema.org Recipe data or failure reason).
+model SourceCache {
+  url       String   @id
+  domain    String
+  status    String // ok | no_recipe | blocked_robots | http_error | error
+  data      Json?
+  source    String   @default("local")
+  fetchedAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([domain])
+}
+
+/// Cached web-search responses per (provider, query).
+model SearchCache {
+  key       String   @id
+  provider  String
+  query     String
+  results   Json
+  source    String   @default("local")
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
